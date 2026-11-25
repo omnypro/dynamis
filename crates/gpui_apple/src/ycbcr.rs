@@ -294,6 +294,9 @@ mod tests {
         assert_eq!(matrix_from_tag(Some(&unknown)), Matrix::Bt601);
         let empty = CFString::from_str("");
         assert_eq!(matrix_from_tag(Some(&empty)), Matrix::Bt601);
+        // AVPlayer tags BT.601 625-line video with the matrix code instead of a name.
+        let numbered = CFString::from_str("YCbCrMatrix#5");
+        assert_eq!(matrix_from_tag(Some(&numbered)), Matrix::Bt601);
     }
 
     #[test]
