@@ -1,4 +1,3 @@
-#![cfg_attr(not(test), expect(dead_code))]
 //! The YCbCr to RGB transform of a video surface.
 
 use objc2_core_foundation::{CFString, CFType};
