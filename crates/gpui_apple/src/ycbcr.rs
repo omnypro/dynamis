@@ -40,8 +40,9 @@ impl Matrix {
 ///
 /// The chroma center is 128/255 in both levels, so a sample with neutral
 /// chroma decodes to a gray, and at full range that gray has the luma's value.
-/// Only the matrix changes with the buffer's tag. Primaries and transfer are not converted, so a BT.2020 buffer or a
-/// buffer with a non-sRGB transfer draws with the matrix alone.
+/// Only the matrix changes with the buffer's tag. Primaries and transfer are
+/// not converted, so a BT.2020 buffer or a buffer with a non-sRGB transfer draws
+/// with the matrix alone.
 pub(crate) fn ycbcr_transform(matrix: Matrix, levels: Levels) -> [[f32; 4]; 4] {
     let (kr, kb) = matrix.luma_weights();
     let kg = 1.0 - kr - kb;
