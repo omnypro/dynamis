@@ -35,12 +35,12 @@ impl Matrix {
     }
 }
 
-/// Returns the column-major matrix that maps `(y, cb, cr, 1)`, with each
-/// sample normalized from 8 bits, to `(r, g, b, 1)`.
+/// Returns the column-major matrix that maps `(y, cb, cr, 1)` to `(r, g, b, 1)`.
+/// Each input is an 8-bit sample divided by 255.
 ///
-/// The chroma center is 128/255 in both levels, so a neutral sample decodes to
-/// a gray with the luma's value. Only the matrix changes with the buffer's
-/// tag. Primaries and transfer are not converted, so a BT.2020 buffer or a
+/// The chroma center is 128/255 in both levels, so a sample with neutral
+/// chroma decodes to a gray, and at full range that gray has the luma's value.
+/// Only the matrix changes with the buffer's tag. Primaries and transfer are not converted, so a BT.2020 buffer or a
 /// buffer with a non-sRGB transfer draws with the matrix alone.
 pub(crate) fn ycbcr_transform(matrix: Matrix, levels: Levels) -> [[f32; 4]; 4] {
     let (kr, kb) = matrix.luma_weights();
@@ -100,9 +100,9 @@ mod tests {
     const MATRICES: [Matrix; 3] = [Matrix::Bt601, Matrix::Bt709, Matrix::Bt2020];
     const LEVELS: [Levels; 2] = [Levels::Full, Levels::Video];
 
-    /// A BT.601 full range matrix with coefficients rounded to four places and
-    /// a chroma center of 0.5.
-    const OLD_LITERAL: [[f32; 4]; 4] = [
+    /// The BT.601 full range matrix as JFIF writes it: coefficients rounded to
+    /// four places and a chroma center of 0.5.
+    const JFIF_601_LITERAL: [[f32; 4]; 4] = [
         [1.0, 1.0, 1.0, 0.0],
         [0.0, -0.3441, 1.7720, 0.0],
         [1.4020, -0.7141, 0.0, 0.0],
@@ -143,29 +143,29 @@ mod tests {
     }
 
     #[test]
-    fn the_601_full_range_coefficients_equal_the_old_literal_within_5e_5() {
+    fn the_601_full_range_coefficients_equal_the_jfif_values_within_5e_5() {
         let transform = ycbcr_transform(Matrix::Bt601, Levels::Full);
         for column in 0..3 {
             for row in 0..4 {
-                let (actual, old) = (transform[column][row], OLD_LITERAL[column][row]);
+                let (actual, jfif) = (transform[column][row], JFIF_601_LITERAL[column][row]);
                 assert!(
-                    (actual - old).abs() < 5e-5,
-                    "column {column} row {row}: {actual} differs from {old}"
+                    (actual - jfif).abs() < 5e-5,
+                    "column {column} row {row}: {actual} differs from {jfif}"
                 );
             }
         }
     }
 
     #[test]
-    fn the_601_full_range_bias_differs_from_the_old_literal_only_by_the_chroma_center() {
+    fn the_601_full_range_bias_is_the_jfif_bias_moved_to_the_128_255_center() {
         let transform = ycbcr_transform(Matrix::Bt601, Levels::Full);
         let center_ratio = (128.0 / 255.0) / 0.5;
         for row in 0..3 {
-            let (actual, old) = (transform[3][row], OLD_LITERAL[3][row]);
-            assert_ne!(actual, old);
+            let (actual, jfif) = (transform[3][row], JFIF_601_LITERAL[3][row]);
+            assert_ne!(actual, jfif);
             assert!(
-                (actual - old * center_ratio).abs() < 5e-5,
-                "row {row}: {actual} is not {old} moved to the 128/255 center"
+                (actual - jfif * center_ratio).abs() < 5e-5,
+                "row {row}: {actual} is not {jfif} moved to the 128/255 center"
             );
         }
         assert_eq!(transform[3][3], 1.0);

@@ -2084,7 +2084,7 @@ mod tests {
     }
 
     #[test]
-    fn a_buffer_with_an_unsupported_pixel_format_is_rejected_with_the_old_error() {
+    fn a_buffer_with_an_unsupported_pixel_format_is_rejected_with_the_format_error() {
         let error = render_surfaces(&[pixel_buffer(kCVPixelFormatType_32BGRA)]).unwrap_err();
         assert_eq!(
             error.to_string(),
